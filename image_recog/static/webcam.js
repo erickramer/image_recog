@@ -31,10 +31,17 @@ $(document).ready(function(){
     var context = canvas.getContext("2d");
     context.drawImage(video, 0, 0, 224, 224)
 
-    var post_data = {image: canvas.toDataURL('image/png')}
+    var post_data = {image: canvas.toDataURL('image/jpg')}
     $.post('/api/score', post_data, function(data){
       console.log(data)
-      $("#label").text("Label: " + data)
+      var vgg = data.vgg
+
+      var top_tag = _.chain(vgg)
+        .sortBy(function(x){return -x.score})
+        .first()
+        .value();
+
+      $("#label").text(top_tag.tag)
     })
   }
 });
