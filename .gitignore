@@ -1,4 +1,5 @@
 notebooks
-data
+data/images
+data/vgg*
 *pyc
 venv
