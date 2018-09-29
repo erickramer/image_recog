@@ -45,11 +45,27 @@
   <div class="container">
     <div class="row">
       <div style="margin-top: 5%">
-        <h4>WebCam image recognition</h4>
-        <p id="label"></p>
-        <video id="player" autoplay="true"></video>
-        <canvas id="canvas"></canvas>
+        <h3>WebCam image recognition</h3>
       </div>
+    <div class="row">
+      <button id="mobile" class="button-primary">MobileNet</button>
+      <button id='vgg'>VGG</button>
+    </div>
+    <div class="row">
+      <div class="eight columns">
+        <video id="player" autoplay="true"></video>
+      </div>
+      <div class="four columns">
+        <canvas id="canvas"></canvas>
+        <br/>
+        <h6>Top 5 labels</h6>
+        <ol id="list">
+        </ol>
+      </div>
+    </div>
+
+    <div class="row">
+
     </div>
   </div>
 

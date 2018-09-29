@@ -1,3 +1,7 @@
 from image_recog import app
 
-app.run()
+if __name__ == "__main__":
+    app.config['TESTING'] = True
+    app.config['DEBUG'] = True
+    app.config['ENV'] = 'dev'
+    app.run()

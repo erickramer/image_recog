@@ -1,171 +1,123 @@
-from keras.models import Sequential
-from keras.layers.core import Flatten, Dense, Dropout
-from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
-from keras.optimizers import SGD
+import keras as ks
 import numpy as np
 import os
+import re
 import scipy.misc
-
-def VGG_expanded(weights_path="./data/vgg_expanded.h5"):
-
-    model = Sequential()
-    model.add(ZeroPadding2D((1,1),input_shape=(3,4*224,4*224)))
-    model.add(Convolution2D(64, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(64, 3, 3, activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(128, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(128, 3, 3, activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(256, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(256, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(256, 3, 3, activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(Convolution2D(4096, 7, 7))
-    model.add(Dropout(0.5))
-    model.add(Convolution2D(4096, 1, 1))
-    model.add(Dropout(0.5))
-    model.add(Convolution2D(1000, 1, 1, activation='linear'))
-
-    if weights_path:
-        model.load_weights(weights_path)
-
-    return model
-
-def VGG_16(weights_path="./data/vgg16_weights.h5"):
-    model = Sequential()
-    model.add(ZeroPadding2D((1,1),input_shape=(3,224,224)))
-    model.add(Convolution2D(64, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(64, 3, 3, activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(128, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(128, 3, 3, activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(256, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(256, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(256, 3, 3, activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
-    model.add(ZeroPadding2D((1,1)))
-    model.add(Convolution2D(512, 3, 3, activation='relu'))
-    model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-    model.add(Flatten())
-    model.add(Dense(4096, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(4096, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(1000, activation='softmax'))
-
-    if weights_path:
-        model.load_weights(weights_path)
-
-    return model
-
-def normalize_image(f, size=(224, 224)):
-
-    mean_pixel = [103.939, 116.779, 123.68]
-
-    img = scipy.misc.imread(f)
-
-    img = img[:, :, 0:3]
-    img = scipy.misc.imresize(img, size)
-    img = img.astype(np.float32, copy=False)
-
-    for c in range(3):
-        img[:, :, c] = img[:, :, c] - mean_pixel[c]
-
-    img = img.transpose((2,0,1))
-    img = np.expand_dims(img, axis=0)
-
-    return img
 
 class ImageScorer(object):
 
-    def __init__(self, tag_path="./data/tags.txt"):
-        self._vgg = VGG_16()
-        #self._vgg_expanded = VGG_expanded()
+    def __init__(self, tag_path="./data/tags.txt", logger=None,
+        init_models = ['vgg', 'mobile'], data_dir = "./data/images"):
 
+        # load labels for image categories
         tags = open(tag_path).readlines()
-        self._tags = [tag.strip('\n') for tag in tags]
+        tags = [tag.strip('\n') for tag in tags]
+        self._tags = [re.sub("^n[0-9]+ ", "", tag) for tag in tags]
 
-    def __call__(self, f):
-        return self.score(f)
+        # logger
+        self._logger = logger
 
-    def _score_vgg(self, f):
-        img = normalize_image(f, size=(224,224))
+        if 'mobile' in init_models:
+            self._init_mobile()
+        else:
+            self._mobile = None
 
-        p = self._vgg.predict(img)
-        res = []
-        for i, score in enumerate(p[0, :]):
-            res.append({'tag': self._tags[i], 'score': float(score)})
+        if 'vgg' in init_models:
+            self._init_vgg()
+        else:
+            self._vgg = None
 
-        return res
+    def _init_vgg(self, data_dir = None):
+        if self._logger is not None:
+            self._logger.info("Initializing VGG")
 
-    def _score_vgg_expanded(self, f):
-        img = normalize_image(f, size=(4*224, 4*224))
+        self._vgg = ks.applications.vgg16.VGG16()
 
-        p = self._vgg_expanded.predict(img)[0, :, :, :]
-        res = []
+        if data_dir is not None:
+            cat_path = os.path.join(data_dir, 'cat.jpeg')
+            try:
+                scores = self.score(cat_path, size = (224, 224), model = "vgg")
+            except:
+                if self._logger is not None:
+                    self._logger.error("Failed to initialize VGG")
+                pass
 
-        for i in range(p.shape[0]):
-            tag = self._tags[i]
+    def _init_mobile(self, data_dir = None):
+        if self._logger is not None:
+            self._logger.info("Initializing MobileNet")
+
+        self._mobile = ks.applications.mobilenet.MobileNet(alpha=0.25)
+
+        if data_dir is not None:
+            cat_path = os.path.join(data_dir, 'cat.jpeg')
+            try:
+                scores = self.score(cat_path, size = (224, 224), model = "mobile")
+            except:
+                if self._logger is not None:
+                    self._logger.error("Failed to initialize MobileNet")
+
+
+    def _normalize(self, f, size, model):
+
+        if self._logger is not None:
+            self._logger.info("Normalizing image file")
+
+        img = scipy.misc.imread(f)
+        img = img[:, :, 0:3]
+        img = scipy.misc.imresize(img, size)
+        img = img.astype(np.float32, copy=False)
+
+        if model == "mobile":
+            img = 2*(img / 255) - 1 # normalizing for mobilenet
+
+        arr = np.expand_dims(img, axis=0)
+
+        if self._logger is not None:
+            self._logger.info("Normalizing created: %s", arr.__str__())
+
+        return arr
+
+
+    def _predict(self, arr, model):
+        if self._logger is not None:
+            self._logger.info("Predicting with input: %s", arr.__str__())
+
+        if model == "mobile":
+            if self._mobile is None:
+                self._init_mobile()
+
+            p = self._mobile.predict(arr)
+        else:
+            if self._vgg is None:
+                self._init_vgg()
+
+            p = self._vgg.predict(arr)
+
+        if self._logger is not None:
+            self._logger.info("Created predictions: ", p.__str__())
+
+        return p
+
+    def score(self, f, size = (224, 224), model = "mobile"):
+
+        # normalizing input
+        try:
+            arr = self._normalize(f, size, model)
+        except: # this shouldn't throw an error
+            raise
+
+        # scoring model
+        try:
+            p = self._predict(arr, model)
+            error = False
             scores = []
-            for j in range(p.shape[1]):
-                for k in range(p.shape[2]):
-                    score = {'x': i, 'y': j, 'score': float(p[i, j, k])}
-                    scores.append(score)
-            res.append({'tag': tag, 'scores': scores})
+            for i, score in enumerate(p[0, :]):
+                scores.append({'tag': self._tags[i], 'score': float(score)})
 
-        return res
+        except ValueError as err:
+            if self._logger is not None:
+                self._logger.error("Fail to predict: ", err.__str__())
+            scores = []
+            error = True
 
-    def score(self, f):
-        vgg = self._score_vgg(f)
-        #vgg_expanded = self._score_vgg_expanded(f)
-        vgg_expanded = None
-
-        return {'vgg': vgg, 'vgg_expanded': vgg_expanded}
+        return {'scores': scores, 'error': error}

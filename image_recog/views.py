@@ -8,7 +8,7 @@ import scipy.misc
 import io
 import numpy as np
 
-score = ml.ImageScorer()
+img_scorer = ml.ImageScorer(logger=app.logger)
 
 @app.route("/")
 def index():
@@ -16,13 +16,16 @@ def index():
 
 @app.route("/api/score", methods=["POST"])
 def api_score():
+
+    # parse image from webcam
     file_type, data = request.form['image'].split(',')
     bindata = data.decode("base64")
-    mean_pixel = [103.939, 116.779, 123.68]
-
     f = io.BytesIO(bindata)
+    
+    # read model requested
+    model = request.form['model']
 
-    s = score(f)
+    s = img_scorer.score(f, model=model)
 
     return jsonify(s)
 
